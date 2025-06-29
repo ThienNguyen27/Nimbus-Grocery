@@ -22,17 +22,22 @@
         choco install cmake
         ```
 
-4. **Install required Python packages**
+4. **Install required Python packages for person detection model**
     ```bash
     pip install cmake
     pip install face_recognition
     ```
 
+5. **Install required Python packages for grocery dection model**
+    ```bash
+    cd ml-models/grocery-detection-model
+    pip install -r requirements.txt
+    ```
 ---
 
 ## 📷 Usage
 
-To run:
+To run person detection model:
 ```bash
 cd ml-models/person-detection-model
 python model.py

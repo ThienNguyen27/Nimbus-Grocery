@@ -148,7 +148,7 @@ def detect_person_realtime(known_face_encodings, known_face_names):
             font = cv2.FONT_HERSHEY_DUPLEX
             cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
 
-        cv2.imshow('Video', frame)
+        cv2.imshow('Person detection', frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
