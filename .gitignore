@@ -54,11 +54,11 @@ fastlane/screenshots
 # clerk configuration (can include secrets)
 /.clerk/
 
-
 .next
 
 # virtual enviroment
 venv/
 person-detection-model/.venv/
 
-# 
+# environment variable
+.env.local
