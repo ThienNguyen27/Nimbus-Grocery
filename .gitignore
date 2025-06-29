@@ -60,3 +60,5 @@ fastlane/screenshots
 # virtual enviroment
 venv/
 person-detection-model/.venv/
+
+# 
