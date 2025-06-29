@@ -1,7 +1,0 @@
-- Create virtual environment
-(for some window user) Download Microsoft C++ build tools
-During install, select 
-    + Desktop development with C++
-    + Windows 10/11 SDK
-- brew install cmake
-- pip3 install face_recognition
