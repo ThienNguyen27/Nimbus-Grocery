@@ -55,7 +55,7 @@ export default function About() {
             </h2>
             <p className="text-gray-600 mb-6 leading-relaxed">
               At Nimbus, our mission is to revolutionize payments by making them faster, safer, and truly contactless.
-Using Face-ID technology, we enable users to pay securely without touching a card, phone, or keypad.
+Using facial biometric authentication, we enable users to pay securely without touching a card, phone, or keypad.
 
             </p>
            
@@ -69,7 +69,7 @@ Using Face-ID technology, we enable users to pay securely without touching a car
 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
   <div className="p-4 rounded-lg shadow bg-white text-center">
     <div className="text-4xl mb-2">👁️</div>
-    <h3 className="font-semibold text-lg">Face-ID Powered</h3>
+    <h3 className="font-semibold text-lg">AI-driven facial ID Powered</h3>
     <p className="text-sm text-gray-600">Pay instantly with facial recognition — no cards, phones, or pins required.</p>
   </div>
   <div className="p-4 rounded-lg shadow bg-white text-center">

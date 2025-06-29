@@ -108,7 +108,7 @@ export default function Home() {
               No cash. No touch. No delay.
             </h1>
             <p className="text-xl text-gray-600 mb-8">
-              Contactless payment using Face ID technology enables secure,<br />
+              Contactless payment using Facial biometric authentication enables secure,<br />
                biometric authentication by allowing users to authorize transactions simply by scanning their face.
             </p>  
           </motion.div>
@@ -141,7 +141,7 @@ export default function Home() {
                                 />
                               </div>
                 <h3 className="text-xl font-semibold mb-2">
-                  Seamless FaceID Checkout
+                  Seamless Facial biometric Checkout
                 </h3>
                 <p className="text-gray-600">
                   Pay instantly using facial recognition (no phones, cards, or cash required.)
@@ -202,26 +202,7 @@ export default function Home() {
             <p className="text-gray-600 text-sm">
               © {new Date().getFullYear()} Nimbus. All rights reserved.
             </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <Link
-                href="/terms"
-                className="text-gray-600 hover:text-gray-900 text-sm transition-colors"
-              >
-                Terms
-              </Link>
-              <Link
-                href="/privacy"
-                className="text-gray-600 hover:text-gray-900 text-sm transition-colors"
-              >
-                Privacy
-              </Link>
-              <Link
-                href="/contact"
-                className="text-gray-600 hover:text-gray-900 text-sm transition-colors"
-              >
-                Contact
-              </Link>
-            </div>
+
           </motion.div>
         </div>
       </footer>
