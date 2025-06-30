@@ -1,5 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+from ultralytics import YOLO
+import cv2
+import numpy as np
+import io
 import os
 from dotenv import load_dotenv
 
@@ -16,10 +21,22 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+model = YOLO("../ml-models/grocery-detection-model/run/train/grocery_finetune5/weights/best.pt")
+
 @app.get("/hello")
 def read_hello():
     return "Hello World"
 
 @app.get("/predict")
-def predict():
-    return "Predict"
+async def predict(file: UploadFile = File(...)):
+    contents = await file.read()
+    npimg = np.frombuffer(contents, np.uint8)
+    frame = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+
+    results = model.predict(frame, conf=0.4, iou=0.5)
+    annotated = results[0].plot()
+
+    _, img_encoded = cv2.imencode(".jpg", annotated)
+    return StreamingResponse(io.BytesIO(img_encoded.tobytes()), media_type="image/jpeg")
+
