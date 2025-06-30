@@ -62,3 +62,6 @@ person-detection-model/.venv/
 
 # environment variable
 .env.local
+
+# Python compile
+backend/__pycache__/
