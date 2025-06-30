@@ -1,7 +1,4 @@
-yahoo_fin
-pandas
-flask
-requests_html
-html5lib
 fastapi
-uvicorn
+uvicorn         # ASGI server to run FastAPI
+requests       # For making HTTP requests to other APIs
+python-dotenv    # Load environment variables from .env
