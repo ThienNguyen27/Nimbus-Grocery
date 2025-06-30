@@ -63,5 +63,8 @@ person-detection-model/.venv/
 # environment variable
 .env.local
 
+# Python compile
+backend/__pycache__/
+
 # Model Fine tuning
 ml-models\grocery-detection-model\data
