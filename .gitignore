@@ -65,3 +65,6 @@ person-detection-model/.venv/
 
 # Python compile
 backend/__pycache__/
+
+# Model Fine tuning
+ml-models\grocery-detection-model\data
