@@ -1,0 +1,6 @@
+train: images/train
+val:   images/val
+
+nc: 19
+names: ["Apple", "Avocado", "Banana", "Kiwi", "Lemon", "Lime", "Mango", "Nectarine", "Orange", "Papaya", "Passion-Fruit", "Peach", "Pineapple", "Plum", "Pomegranate", "Red-Grapefruit", "Tomato", "Watermelon", "Cataloupe"]
+
