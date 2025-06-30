@@ -20,3 +20,7 @@ app.add_middleware(
 @app.get("/hello")
 def read_hello():
     return "Hello World"
+
+@app.get("/predict")
+def predict():
+    return "Predict"
