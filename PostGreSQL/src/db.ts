@@ -4,7 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 dotenv.config({
-  path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../.env')
+  path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../.env.local')
 });
 
 const connectionString = process.env.DATABASE_URL;

@@ -51,10 +51,10 @@ def run_model_on_webcam(conf: float = 0.25, iou: float = 0.45, cam_index: int = 
 
 if __name__ == "__main__":
     # To test on a file, uncomment below and set the correct path:
-    run_model_on_file("imagesToTest/manHoldingApple.jpg")
+    # run_model_on_file("imagesToTest/manHoldingApple.jpg")
 
     # To test on your webcam, uncomment below:
-    # run_model_on_webcam()
+    run_model_on_webcam()
     
     # If both are commented, nothing will run. Just choose one!
     pass
