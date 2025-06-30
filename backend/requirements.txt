@@ -2,3 +2,5 @@ fastapi
 uvicorn         # ASGI server to run FastAPI
 requests       # For making HTTP requests to other APIs
 python-dotenv    # Load environment variables from .env
+SQLAlchemy  # ORM of python classes and DB
+psycopg2-binary #  Driver for PostgreSQL
