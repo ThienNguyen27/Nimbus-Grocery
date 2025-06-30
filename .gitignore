@@ -62,3 +62,6 @@ person-detection-model/.venv/
 
 # environment variable
 .env.local
+
+# Model Fine tuning
+ml-models\grocery-detection-model\data
