@@ -76,10 +76,10 @@
 <body>
   <div class="container">
     <h1>Sign Up</h1>
-    <form id="signup-form">
-      <input type="text" id="name" placeholder="Full Name" required />
-      <input type="email" id="email" placeholder="Email Address" required />
-      <input type="password" id="password" placeholder="Password" required />
+    <form id="signup-form" method="post">
+      <input type="text"    name="username" id="username" placeholder="Full Name"     required />
+      <input type="email"   name="email"    id="email"    placeholder="Email Address" required />
+      <input type="password"name="password" id="password" placeholder="Password"      required />
       <button type="submit">Sign Up</button>
     </form>
     <p id="message"></p>
