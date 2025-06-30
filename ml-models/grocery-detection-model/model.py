@@ -89,7 +89,7 @@ if __name__ == "__main__":
     # To test on a file, uncomment below and set the correct path:
     # run_model_on_file("imagesToTest/manHoldingApple.jpg")
 
-    # run_model_on_webcam()
+    run_model_on_webcam()
     
     # If both are commented, nothing will run. Just choose one!
     pass

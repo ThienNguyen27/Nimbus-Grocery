@@ -70,7 +70,7 @@ const Header = () => {
         </div>
 
         <SignedOut>
-          <Link href="/auth/sign-in" passHref>
+          <Link href="Nimbus-Grocery/PostGreSQL/public/signup.html" passHref>
             <span className="text-gray-600 hover:text-black transition-colors">
               Sign In
             </span>
