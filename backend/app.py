@@ -26,6 +26,10 @@ app.add_middleware(
 @app.get("/hello")
 def read_hello():
     return "Hello World"
+
+@app.get("/predict")
+def predict():
+    return "Predict"
 @app.get("/signup", response_class=HTMLResponse)
 async def get_signup_page(request: Request):
     return templates.TemplateResponse("signup.html", {"request": request})
