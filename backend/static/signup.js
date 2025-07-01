@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const name = document.getElementById("username").value;
         const email = document.getElementById("email").value;
         const password = document.getElementById("password").value;
-
+        // hash face-id here
         const data = { name, email, password };
 
         try {
