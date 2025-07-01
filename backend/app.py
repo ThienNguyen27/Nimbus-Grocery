@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
 from models import *
-from schemas import *
+from schemas import UserLoginRequest, TokenResponse
+from sqlalchemy.orm import Session
 from databases import Database
 from sqlalchemy import create_engine, select, update, insert
 from sqlalchemy.orm import sessionmaker
@@ -190,6 +191,8 @@ model = YOLO("../ml-models/grocery-detection-model/run/train/grocery_finetune5/w
 def read_hello():
     return "Hello World"
 
+
+# detect groceries 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     contents = await file.read()
@@ -202,7 +205,22 @@ async def predict(file: UploadFile = File(...)):
     _, img_encoded = cv2.imencode(".jpg", annotated)
     return StreamingResponse(io.BytesIO(img_encoded.tobytes()), media_type="image/jpeg")
 
+# detect peron
+@app.post("/predict-person")
+async def predictBuyer(file: UploadFile = File(...)):
+    return
+
+
 @app.get("/signup", response_class=HTMLResponse)
 @app.get("/signup/", response_class=HTMLResponse)
 async def get_signup_page(request: Request):
     return templates.TemplateResponse("signup.html", {"request": request})
+
+
+@app.post("/signin", response_model=TokenResponse)
+def signin(data: UserLoginRequest, db: Session = Depends(SessionLocal)):
+    row = db.execute(select(users).where(users.c.email == data.email)).fetchone()
+    if not row or not bcrypt.checkpw(data.password.encode(), row.password_hash.encode()):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    # here you’d normally issue a JWT; for now:
+    return {"token": str(row.user_id)}
