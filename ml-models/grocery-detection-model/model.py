@@ -21,14 +21,21 @@ def preprocess_frame(frame, blur_background=True):
     cropped = frame[y1:y2, x1:x2].copy()
 
     if blur_background:
-        # Blur the full frame
+        # Blur entire frame
         blurred = cv2.GaussianBlur(frame, (45, 45), 0)
-        # Replace center region with original cropped version
+        # Restore central region
         blurred[y1:y2, x1:x2] = cropped
-        return blurred
+        output = blurred
     else:
-        return cropped
+        output = cropped
 
+    # Draw border around center box (visible ROI)
+    border_color = (255, 255, 255)  # White
+    border_thickness = 2
+    cv2.rectangle(output, (x1, y1), (x2, y2), border_color, border_thickness)
+
+    return output
+    
 def run_model_on_file(file_path: str, conf: float = 0.25, iou: float = 0.45):
     """
     Run the YOLOv8 model on a single image or video file.
@@ -89,7 +96,7 @@ if __name__ == "__main__":
     # To test on a file, uncomment below and set the correct path:
     # run_model_on_file("imagesToTest/manHoldingApple.jpg")
 
-    # run_model_on_webcam()
+    run_model_on_webcam()
     
     # If both are commented, nothing will run. Just choose one!
     pass

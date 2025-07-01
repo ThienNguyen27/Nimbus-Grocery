@@ -68,17 +68,9 @@ const Header = () => {
             </motion.div>
           </nav>
         </div>
-
-        <SignedOut>
-          <Link href="/auth/sign-in" passHref>
-            <span className="text-gray-600 hover:text-black transition-colors">
-              Sign In
-            </span>
-          </Link>
-        </SignedOut>
-        <SignedIn>
-          <UserButton />
-        </SignedIn>
+<Link href="/signup">
+  <span>Sign Up</span>
+</Link>
 
         {/* <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
           <Button variant="outline" className="bg-white hover:bg-gray-50 transition-colors">
