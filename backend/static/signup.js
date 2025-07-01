@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Redirect user to /signedin/page
     setTimeout(() => {
-        window.location.href = "/signedin/page"; // or "/signedin/page.tsx" depending on your routing
+        window.location.href = "http://localhost:3000/signin"; // or "/signedin/page.tsx" depending on your routing
     }, 1000);
 } else {
                 console.error(result);
