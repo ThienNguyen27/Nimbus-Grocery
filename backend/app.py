@@ -1,12 +1,12 @@
 # uvicorn app:app --reload
 from fastapi.middleware.cors import CORSMiddleware
-import os
+import os, sys
 from dotenv import load_dotenv
 from models import *
 from schemas import *
 from databases import Database
 from sqlalchemy import create_engine, select, update, insert
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 import bcrypt
 import uuid
 import traceback
@@ -20,12 +20,16 @@ from ultralytics import YOLO
 import cv2
 import numpy as np
 import io
-
 import os
 from fastapi.responses import HTMLResponse
 from dotenv import load_dotenv
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+import face_recognition
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from ml_models.person_detection_model.model import load_known_faces, safe_face_encodings
+import json
+
 # Load environment variables from .env.local
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "../.env.local"))
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -62,19 +66,41 @@ def home():
     return {"message": "welcome to nimbus!"}
 
 @app.post("/signup", response_model=UserResponse)
-def signup(data: UserSignupRequest, db=Depends(get_db)):
+async def signup(
+    name: str            = Form(...),
+    email: str           = Form(...),
+    password: str        = Form(...),
+    photo: UploadFile = File(...),
+    db: Session          = Depends(get_db),
+):
     try:
-        hashed_password = bcrypt.hashpw(data.password.encode(), bcrypt.gensalt()).decode()
-        random_face_id = str(uuid.uuid4())
-        face_id = data.face_id_hash or random_face_id
+        # Hash password
+        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+        # Hash face id
+        img_bytes = await photo.read()
+        nparr     = np.frombuffer(img_bytes, np.uint8)
+        bgr_img   = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        rgb_img   = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2RGB)
+
+        # detect & encode faces
+        face_locations = face_recognition.face_locations(rgb_img)
+        encodings      = safe_face_encodings(rgb_img, face_locations)
+        if not encodings:
+            raise HTTPException(400, "Could not detect a face in the uploaded photo.")
+
+        # serialize the first 128-dim embedding as JSON
+        face_embedding = encodings[0].tolist()
+        face_id_hash   = json.dumps(face_embedding)
+        
 
         result = db.execute(
             insert(users).values(
-                name=data.name,
-                email=data.email,
+                name = name,
+                email= email,
                 password_hash=hashed_password,
-                face_id_hash=face_id,
-                balance=100.0
+                face_id_hash = face_id_hash,
+                balance = 100.0
             )
         )
         logger.info("result %s", result)
@@ -184,7 +210,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-model = YOLO("../ml-models/grocery-detection-model/run/train/grocery_finetune5/weights/best.pt")
+model = YOLO("../ml_models/grocery-detection-model/run/train/grocery_finetune5/weights/best.pt")
 
 @app.get("/hello")
 def read_hello():

@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sign Up</title>
   <style>
     body {
@@ -73,18 +74,29 @@
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <h1>Sign Up</h1>
     <form id="signup-form" method="post">
-      <input type="text"    name="username" id="username" placeholder="Full Name"     required />
-      <input type="email"   name="email"    id="email"    placeholder="Email Address" required />
-      <input type="password"name="password" id="password" placeholder="Password"      required />
+      <input type="text" name="username" id="username" placeholder="Full Name" required />
+      <input type="email" name="email" id="email" placeholder="Email Address" required />
+      <input type="password" name="password" id="password" placeholder="Password" required />
+
+      <!-- ───────────  CAMERA PREVIEW  ─────────── -->
+      <video id="camera" autoplay playsinline width="320" height="240"
+        style="border:1px solid #ccc; margin-bottom:1rem;"></video>
+      <button id="snap" type="button" style="margin-bottom:1rem;">📸 Take Photo</button>
+      <canvas id="preview" width="320" height="240"
+        style="display:none; border:1px solid #ccc; margin-bottom:1rem;"></canvas>
+      <!-- ───────────────────────────────────────── -->
+
       <button type="submit">Sign Up</button>
     </form>
     <p id="message"></p>
   </div>
 
-<script type="module" src="/static/signup.js"></script>
+  <script type="module" src="/static/signup.js"></script>
 </body>
+
 </html>
