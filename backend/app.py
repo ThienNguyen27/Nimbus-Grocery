@@ -20,13 +20,13 @@ from ultralytics import YOLO
 import cv2
 import numpy as np
 import io
-
 import os
 from fastapi.responses import HTMLResponse
 from dotenv import load_dotenv
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import face_recognition
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from ml_models.person_detection_model.model import load_known_faces, safe_face_encodings
 import json
 
@@ -75,7 +75,7 @@ async def signup(
 ):
     try:
         # Hash password
-        hashed_password = bcrypt.hash(password)
+        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
         # Hash face id
         img_bytes = await photo.read()
@@ -89,7 +89,7 @@ async def signup(
         if not encodings:
             raise HTTPException(400, "Could not detect a face in the uploaded photo.")
 
-        # 4) serialize the first 128-dim embedding as JSON
+        # serialize the first 128-dim embedding as JSON
         face_embedding = encodings[0].tolist()
         face_id_hash   = json.dumps(face_embedding)
         
