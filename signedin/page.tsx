@@ -206,8 +206,13 @@ export default function Home() {
           </motion.div>
         </div>
       </footer>
-      
+      <div className="flex justify-center mt-4">
+  <Link href="/predict">
+  <button className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700">
+    Predict</button></Link>
+
+
+</div>
     </div>
-    
   );
 }
