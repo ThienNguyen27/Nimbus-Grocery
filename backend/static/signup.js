@@ -8,7 +8,7 @@ form.addEventListener('submit', async (e) => {
   const formData = new FormData(form);
 
   try {
-    const res = await fetch('http://192.168.68.62:8000/signup', {
+    const res = await fetch('http://127.0.0.1:8000/signup', {
       method:      'POST',
       credentials: 'include',    // if you ever want cookies/auth
       body:        formData      // automatically sets Content-Type: multipart/form-data
