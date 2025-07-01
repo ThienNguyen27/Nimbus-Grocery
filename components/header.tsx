@@ -74,7 +74,11 @@ const Header = () => {
             Sign In
           </Button>
         </motion.div> */}
+            <Link href="/signup">
+  <span>Sign Up</span>
+</Link>
       </div>
+
     </header>
 
     //   <header className="fixed top-0 left-0 z-50 w-full bg-white shadow-md">
