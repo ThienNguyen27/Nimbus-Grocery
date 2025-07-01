@@ -28,6 +28,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import face_recognition
 from ml_models.person_detection_model.model import load_known_faces, safe_face_encodings
+import json
 
 # Load environment variables from .env.local
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "../.env.local"))

@@ -30,7 +30,7 @@
 
 5. **Install required Python packages for grocery dection model**
     ```bash
-    cd ml-models/grocery-detection-model
+    cd ml_models/grocery-detection-model
     pip install -r requirements.txt
     ```
 ---
@@ -39,6 +39,6 @@
 
 To run person detection model:
 ```bash
-cd ml-models/person-detection-model
+cd ml_models/person-detection-model
 python model.py
 ```
