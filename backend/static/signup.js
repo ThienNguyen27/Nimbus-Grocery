@@ -22,15 +22,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const result = await response.json();
 
-           if (response.ok) {
-    message.textContent = "Signup successful!";
-    message.className = "success";
+            if (response.ok) {
+                message.textContent = "Signup successful!";
+                message.className = "success";
 
-    // Redirect user to /signedin/page
-    setTimeout(() => {
-        window.location.href = "http://localhost:3000/signin"; // or "/signedin/page.tsx" depending on your routing
-    }, 1000);
-} else {
+                // Redirect user to /signedin/page
+                setTimeout(() => {
+                    window.location.href = "http://localhost:3001/signin"; // or "/signedin/page.tsx" depending on your routing
+                }, 1000);
+            } else {
                 console.error(result);
                 message.textContent = result.detail || "Signup failed.";
                 message.className = "error";

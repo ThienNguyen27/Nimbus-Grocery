@@ -190,6 +190,8 @@ model = YOLO("../ml-models/grocery-detection-model/run/train/grocery_finetune5/w
 def read_hello():
     return "Hello World"
 
+
+# detect groceries 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     contents = await file.read()
@@ -201,6 +203,12 @@ async def predict(file: UploadFile = File(...)):
 
     _, img_encoded = cv2.imencode(".jpg", annotated)
     return StreamingResponse(io.BytesIO(img_encoded.tobytes()), media_type="image/jpeg")
+
+# detect peron
+@app.post("/predict-person")
+async def predictBuyer(file: UploadFile = File(...)):
+    return
+
 
 @app.get("/signup", response_class=HTMLResponse)
 @app.get("/signup/", response_class=HTMLResponse)
