@@ -6,9 +6,9 @@ export default function PredictPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [resultImg, setResultImg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Start webcam
     const startVideo = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -20,7 +20,6 @@ export default function PredictPage() {
 
     startVideo();
 
-    // Capture and send every 2 seconds
     const interval = setInterval(() => {
       captureAndSend();
     }, 2000);
@@ -47,6 +46,7 @@ export default function PredictPage() {
       formData.append("file", blob, "frame.jpg");
 
       try {
+        setLoading(true);
         const res = await fetch("http://localhost:8000/predict", {
           method: "POST",
           body: formData,
@@ -57,23 +57,39 @@ export default function PredictPage() {
         setResultImg(imageUrl);
       } catch (err) {
         console.error("Error sending frame to backend:", err);
+      } finally {
+        setLoading(false);
       }
     }, "image/jpeg");
   };
 
   return (
-    <div style={{ textAlign: "center", padding: "1rem" }}>
-      <h1>Live Grocery Detection</h1>
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6 space-y-6">
+      <h1 className="text-3xl font-bold text-gray-800">🍎 Live Grocery Detection</h1>
 
-      <video ref={videoRef} autoPlay muted playsInline style={{ width: "480px", height: "360px", borderRadius: "8px" }} />
+      <div className="rounded-xl overflow-hidden shadow-lg border-2 border-gray-200">
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
+          className="w-[480px] h-[360px] object-cover"
+        />
+      </div>
 
       <canvas ref={canvasRef} style={{ display: "none" }} />
 
-      {resultImg && (
-        <>
-          <h2>Prediction</h2>
-          <img src={resultImg} alt="Detected frame" style={{ width: "480px", border: "2px solid green" }} />
-        </>
+      {loading && <p className="text-gray-500 animate-pulse">Predicting...</p>}
+
+      {resultImg && !loading && (
+        <div className="flex flex-col items-center space-y-2">
+          <h2 className="text-xl font-semibold text-green-700">Prediction Result</h2>
+          <img
+            src={resultImg}
+            alt="Predicted Result"
+            className="w-[480px] rounded-xl border-4 border-green-500 shadow-md transition-opacity duration-300"
+          />
+        </div>
       )}
     </div>
   );
