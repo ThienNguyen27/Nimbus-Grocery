@@ -77,6 +77,7 @@ def signup(data: UserSignupRequest, db=Depends(get_db)):
                 balance=100.0
             )
         )
+        logger.info("result %s", result)
         db.commit()
         user_id = result.inserted_primary_key[0]
 
@@ -205,12 +206,3 @@ async def predict(file: UploadFile = File(...)):
 @app.get("/signup/", response_class=HTMLResponse)
 async def get_signup_page(request: Request):
     return templates.TemplateResponse("signup.html", {"request": request})
-
-# handle the form submission
-@app.post("/signup")
-async def post_signup(
-    username: str = Form(...),
-    email:    str = Form(...),
-    password: str = Form(...),
-):
-    return {"status": "ok", "username": username, "email": email}
