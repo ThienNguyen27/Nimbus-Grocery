@@ -3,7 +3,7 @@
 import Header from "@/components/header";
 import WhyItsSafe from '@/components/WhyItsSafe';
 
-
+import Link from "next/link";
 
 import { motion } from "framer-motion";
 
@@ -92,9 +92,11 @@ Using facial biometric authentication, we enable users to pay securely without t
 <h2 className="text-xl font-bold text-center mt-10">Start Paying Smarter</h2>
 <p className="text-center text-gray-600">Join Nimbus and experience the future of payment — contactless, secure, and effortless.</p>
 <div className="flex justify-center mt-4">
+  <Link href="/predict">
   <button className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700">
-    Get Started
-  </button>
+    Predict</button></Link>
+
+
 </div>
         
       </main>
