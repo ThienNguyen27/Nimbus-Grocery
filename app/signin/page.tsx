@@ -83,7 +83,7 @@ export default function Home() {
       <Header />
       <main>
         <section
-          className="relative min-h-screen flex items-center justify-center overflow-hidden"
+          className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
           onMouseMove={handleMouse}
         >
           <motion.div
