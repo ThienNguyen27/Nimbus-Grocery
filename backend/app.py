@@ -190,7 +190,7 @@ model = YOLO("../ml-models/grocery-detection-model/run/train/grocery_finetune5/w
 def read_hello():
     return "Hello World"
 
-@app.get("/predict")
+@app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     contents = await file.read()
     npimg = np.frombuffer(contents, np.uint8)
