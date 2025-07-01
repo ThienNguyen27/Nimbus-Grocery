@@ -68,9 +68,6 @@ const Header = () => {
             </motion.div>
           </nav>
         </div>
-<Link href="/signup">
-  <span>Sign Up</span>
-</Link>
 
         {/* <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
           <Button variant="outline" className="bg-white hover:bg-gray-50 transition-colors">
