@@ -49,3 +49,10 @@ class TransactionResponse(BaseModel):
     created_at: datetime
     balance: float
     items: List[TransactionItemResponse]
+
+class UserLoginRequest(BaseModel):
+    email: str
+    password: str
+
+class TokenResponse(BaseModel):
+    token: str
