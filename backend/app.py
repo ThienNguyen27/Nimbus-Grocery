@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
 from models import *
-from schemas import *
+from schemas import UserLoginRequest, TokenResponse
+from sqlalchemy.orm import Session
 from databases import Database
 from sqlalchemy import create_engine, select, update, insert
 from sqlalchemy.orm import sessionmaker
@@ -206,3 +207,12 @@ async def predict(file: UploadFile = File(...)):
 @app.get("/signup/", response_class=HTMLResponse)
 async def get_signup_page(request: Request):
     return templates.TemplateResponse("signup.html", {"request": request})
+
+
+@app.post("/signin", response_model=TokenResponse)
+def signin(data: UserLoginRequest, db: Session = Depends(SessionLocal)):
+    row = db.execute(select(users).where(users.c.email == data.email)).fetchone()
+    if not row or not bcrypt.checkpw(data.password.encode(), row.password_hash.encode()):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    # here you’d normally issue a JWT; for now:
+    return {"token": str(row.user_id)}
