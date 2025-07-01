@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { useRouter } from 'next/navigation';
 
 export default function PredictPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -63,6 +64,12 @@ export default function PredictPage() {
     }, "image/jpeg");
   };
 
+  const router = useRouter();
+
+   const goToPay = () => {
+    router.push('/payment');
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6 space-y-6">
       <h1 className="text-3xl font-bold text-gray-800">🍎 Live Grocery Detection</h1>
@@ -91,6 +98,13 @@ export default function PredictPage() {
           />
         </div>
       )}
+
+      <button
+        onClick={goToPay}
+        className="mt-4 px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+      >
+        Pay
+      </button>
     </div>
   );
 }
