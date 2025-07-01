@@ -22,7 +22,7 @@ By replacing card scans or phone taps with **biometric authentication**, Nimbus 
 ### 🔹 Backend
 - **FastAPI** – High-performance, modern backend web framework.
 - **PostgreSQL** – Relational database for storing user data and transactions.
-- **Clerk** – Secure and modern authentication (e.g., Google sign-in).
+
 
 ---
 
