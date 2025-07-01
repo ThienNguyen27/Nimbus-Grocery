@@ -1,46 +1,42 @@
-from pydantic import BaseModel
-from typing import List, Optional
-from datetime import datetime
+from sqlalchemy import (Table, Column, Integer, String, Float, DateTime, MetaData, ForeignKey, Text)
+import datetime
 
-class UserResponse(BaseModel):
-    user_id: int
-    name: str
-    email: str
-    balance: float
-    face_id_hash: Optional[str] = None
-    created_at: datetime
+metadata = MetaData()
 
-class BuyItem(BaseModel):
-    item_id: int
-    quantity: int
+users = Table(
+    "users", metadata,
+    Column("user_id", Integer, primary_key=True),
+    Column("name", String(100)),
+    Column("email", String(255), unique=True),
+    Column("balance", Float, default=0.0),
+    Column("face_id_hash", Text, nullable=True),
+    Column("password_hash", String(255), nullable=False),
+    Column("created_at", DateTime, default=datetime.datetime.utcnow),
+)
 
-class BuyRequest(BaseModel):
-    user_id: int
-    items: List[BuyItem]
+item_checklist = Table(
+    "item_checklist", metadata,
+    Column("item_id", Integer, primary_key=True),
+    Column("item_name", String(255)),
+    Column("quantity_remaining", Integer),
+    Column("last_updated", DateTime, default=datetime.datetime.utcnow),
+)
 
-class PayItem(BaseModel):
-    item_id: int
-    quantity: int
-    price: float
+user_transactions = Table(
+    "user_transactions", metadata,
+    Column("transaction_id", Integer, primary_key=True),
+    Column("user_id", Integer, ForeignKey("users.user_id")),
+    Column("amount", Float),
+    Column("description", String(255), nullable=True),
+    Column("created_at", DateTime, default=datetime.datetime.utcnow),
+    Column("balance", Float),
+)
 
-class PayRequest(BaseModel):
-    user_id: int
-    items: List[PayItem]
-    total_amount: float
-    description: Optional[str] = None
-
-class TransactionItemResponse(BaseModel):
-    transaction_item_id: int
-    transaction_id: int
-    item_id: int
-    quantity: int
-    price: float
-
-class TransactionResponse(BaseModel):
-    transaction_id: int
-    amount: float
-    description: Optional[str]
-    created_at: datetime
-    balance: float
-    items: List[TransactionItemResponse]
-# DB schema
+transaction_items = Table(
+    "transaction_items", metadata,
+    Column("transaction_item_id", Integer, primary_key=True),
+    Column("transaction_id", Integer, ForeignKey("user_transactions.transaction_id")),
+    Column("item_id", Integer, ForeignKey("item_checklist.item_id")),
+    Column("quantity", Integer),
+    Column("price", Float),
+)
