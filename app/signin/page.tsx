@@ -83,7 +83,7 @@ export default function Home() {
       <Header />
       <main>
         <section
-          className="relative min-h-screen flex items-center justify-center overflow-hidden"
+          className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
           onMouseMove={handleMouse}
         >
           <motion.div
@@ -106,14 +106,7 @@ export default function Home() {
             </p>
           </motion.div>
 
-          {/* Predict Button */}
-          <div className="relative z-10 text-center mt-8">
-            <Link href="/predict">
-              <button className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700">
-                Predict
-              </button>
-            </Link>
-          </div>
+      
         </section>
 
         <section className="py-16 bg-white/50 relative z-10">
@@ -153,7 +146,16 @@ export default function Home() {
                   Track inventory, customer behavior, and sales in real time with an AI-powered dashboard.
                 </p>
               </motion.div>
+              
             </motion.div>
+                {/* Predict Button */}
+          <div className="relative z-10 text-center mt-8">
+            <Link href="/predict">
+              <button className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Predict
+              </button>
+            </Link>
+          </div>
           </div>
         </section>
       </main>

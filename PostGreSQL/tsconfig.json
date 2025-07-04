@@ -7,5 +7,5 @@
     "strict": true,
     "outDir": "./dist"
   },
-  "include": ["src", "public"]
+  "include": ["src", "public", "../signup/signup.js", "../signup/signup.ts"]
 }
