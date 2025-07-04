@@ -237,6 +237,15 @@ app.add_middleware(
 
 model = YOLO("../ml_models/grocery-detection-model/run/train/grocery_finetune5/weights/best.pt")
 
+# Inference-time filter: drop one class by index
+unwanted_classes = ["Tomato", "Red-grapefruit"]
+unwanted_ids = [
+    model.names.index(c)
+    for c in unwanted_classes
+    if c in model.names
+]
+allowed = [i for i in range(len(model.names)) if i not in unwanted_ids]
+
 @app.get("/hello")
 def read_hello():
     return "Hello World"
