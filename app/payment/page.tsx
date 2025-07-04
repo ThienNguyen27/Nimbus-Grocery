@@ -12,9 +12,9 @@ export default function PaymentPage() {
 
   useEffect(() => {
     setCartItems([
-      { itemId: 1, name: 'Apple',  quantity: 3, price: 0.5 },
-      { itemId: 2, name: 'Banana', quantity: 2, price: 0.75 },
-      { itemId: 7, name: 'Milk',   quantity: 1, price: 2.50 },
+      { itemId: 1, name: 'Apple',  quantity: 1, price: 0.5 },
+      { itemId: 2, name: 'Banana', quantity: 1, price: 0.75 },
+      { itemId: 3, name: 'Avocado',   quantity: 2, price: 1.50 },
     ]);
   }, []);
 
