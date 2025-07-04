@@ -238,7 +238,7 @@ app.add_middleware(
 model = YOLO("../ml_models/grocery-detection-model/run/train/grocery_finetune5/weights/best.pt")
 
 # Inference-time filter: drop one class by index
-unwanted_classes = ["Tomato", "Red-grapefruit"]
+unwanted_classes = ["Tomato", "Red-Grapefruit"]
 unwanted_ids = [
     model.names.index(c)
     for c in unwanted_classes
@@ -258,7 +258,10 @@ async def predict(file: UploadFile = File(...)):
     npimg = np.frombuffer(contents, np.uint8)
     frame = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
 
-    results = model.predict(frame, conf=0.4, iou=0.5)
+    if frame is None:
+        raise HTTPException(status_code=400, detail="Invalid image")
+
+    results = model.predict(frame, conf=0.4, iou=0.5, classes=allowed)
     annotated = results[0].plot()
 
     _, img_encoded = cv2.imencode(".jpg", annotated)
