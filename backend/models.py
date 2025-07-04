@@ -17,6 +17,7 @@ item_checklist = Table(
     Column("item_id", Integer, primary_key=True),
     Column("item_name", String(255)),
     Column("quantity_remaining", Integer),
+    Column("price", Float),
     Column("last_updated", DateTime, default=datetime.datetime.utcnow),
 )
 
@@ -28,6 +29,7 @@ user_transactions = Table(
     Column("description", String(255), nullable=True),
     Column("created_at", DateTime, default=datetime.datetime.utcnow),
     Column("balance", Float),
+    Column("total_quantity", Integer, nullable=False, server_default="0"),
 )
 
 transaction_items = Table(

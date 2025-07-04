@@ -120,22 +120,22 @@ async def signup(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.post("/buy")
-def buy(request: BuyRequest, db=Depends(get_db)):
-    user = db.execute(select(users).where(users.c.user_id == request.user_id)).fetchone()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    for item in request.items:
-        db_item = db.execute(select(item_checklist).where(item_checklist.c.item_id == item.item_id)).fetchone()
-        if not db_item or db_item.quantity_remaining < item.quantity:
-            raise HTTPException(status_code=400, detail=f"Item {item.item_id} unavailable")
-        db.execute(
-            update(item_checklist)
-            .where(item_checklist.c.item_id == item.item_id)
-            .values(quantity_remaining=db_item.quantity_remaining - item.quantity)
-        )
-    db.commit()
-    return {"message": "Items reserved"}
+# @app.post("/buy")
+# def buy(request: BuyRequest, db=Depends(get_db)):
+#     user = db.execute(select(users).where(users.c.user_id == request.user_id)).fetchone()
+#     if not user:
+#         raise HTTPException(status_code=404, detail="User not found")
+#     for item in request.items:
+#         db_item = db.execute(select(item_checklist).where(item_checklist.c.item_id == item.item_id)).fetchone()
+#         if not db_item or db_item.quantity_remaining < item.quantity:
+#             raise HTTPException(status_code=400, detail=f"Item {item.item_id} unavailable")
+#         db.execute(
+#             update(item_checklist)
+#             .where(item_checklist.c.item_id == item.item_id)
+#             .values(quantity_remaining=db_item.quantity_remaining - item.quantity)
+#         )
+#     db.commit()
+#     return {"message": "Items reserved"}
 
 def load_known_faces_from_db() -> tuple[list[np.ndarray], list[str]]:
     db: Session = SessionLocal()
@@ -153,34 +153,80 @@ def load_known_faces_from_db() -> tuple[list[np.ndarray], list[str]]:
             encodings.append(arr)
             names.append(name)
         except Exception as e:
-            print(f"⚠️ could not parse embedding for {name}: {e}")
+            print(f"Could not parse embedding for {name}: {e}")
     return encodings, names
 
 # Immediately after your app/config setup:
 KNOWN_ENCODINGS, KNOWN_NAMES = load_known_faces_from_db()
 @app.post("/pay", response_model=TransactionResponse)
-def pay(request: PayRequest, db=Depends(get_db)):
-    user = db.execute(select(users).where(users.c.user_id == request.user_id)).fetchone()
+async def pay(
+    file: UploadFile = File(...),
+    request_json: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    # 1) Read uploaded image
+    img_bytes = await file.read()
+    nparr = np.frombuffer(img_bytes, np.uint8)
+    bgr_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    if bgr_img is None:
+        raise HTTPException(status_code=400, detail="Invalid uploaded photo")
+
+    # 2) Convert & detect face
+    rgb_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2RGB)
+    face_locations = face_recognition.face_locations(rgb_img)
+    encodings = face_recognition.face_encodings(rgb_img, face_locations)
+    if not encodings:
+        raise HTTPException(status_code=400, detail="No face detected")
+
+    encoding = encodings[0]
+
+    # 3) Compare face embedding
+    matches = face_recognition.compare_faces(KNOWN_ENCODINGS, encoding)
+    if not any(matches):
+        raise HTTPException(status_code=401, detail="Face not recognized")
+
+    best_idx = int(np.argmin(face_recognition.face_distance(KNOWN_ENCODINGS, encoding)))
+    recognized_name = KNOWN_NAMES[best_idx]
+    # 4) Query DB for recognized user
+    user = db.execute(
+        select(users).where(users.c.name == recognized_name)
+    ).fetchone()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    if user.balance < request.total_amount:
+        raise HTTPException(status_code=404, detail="Recognized user not found in DB")
+
+    user_id = user.user_id  # Now we have secure user ID
+
+    # 5) Parse PayRequest from form
+    pay_request_data = json.loads(request_json)
+    pay_request = PayRequest(**pay_request_data)
+
+    # 6) Check balance
+    if user.balance < pay_request.total_amount:
         raise HTTPException(status_code=400, detail="Insufficient funds")
 
-    new_balance = user.balance - request.total_amount
-    db.execute(update(users).where(users.c.user_id == request.user_id).values(balance=new_balance))
+    # 7) Update user balance
+    new_balance = user.balance - pay_request.total_amount
+    db.execute(
+        update(users).where(users.c.user_id == user_id).values(balance=new_balance)
+    )
 
+    total_quantity = sum(item.quantity for item in pay_request.items)
+
+    # 8) Record transaction
     result = db.execute(
         insert(user_transactions).values(
-            user_id=request.user_id,
-            amount=-request.total_amount,
-            description=request.description,
+            user_id=user_id,
+            amount = pay_request.total_amount,
+            total_quantity=total_quantity,
+            description=pay_request.description,
             balance=new_balance,
         )
     )
     transaction_id = result.inserted_primary_key[0]
 
     items_responses = []
-    for item in request.items:
+    for item in pay_request.items:
+        # a) Insert each item in transaction_items
         res = db.execute(
             insert(transaction_items).values(
                 transaction_id=transaction_id,
@@ -197,15 +243,35 @@ def pay(request: PayRequest, db=Depends(get_db)):
             quantity=item.quantity,
             price=item.price,
         ))
+
+        # b) Decrease quantity remaining in item_checklist
+        existing_item = db.execute(
+            select(item_checklist).where(item_checklist.c.item_id == item.item_id)
+        ).fetchone()
+
+        if not existing_item or existing_item.quantity_remaining < item.quantity:
+            raise HTTPException(status_code=400, detail=f"Item {item.item_id} unavailable or insufficient stock")
+
+        db.execute(
+            update(item_checklist)
+            .where(item_checklist.c.item_id == item.item_id)
+            .values(quantity_remaining=existing_item.quantity_remaining - item.quantity)
+        )
+
     db.commit()
 
-    transaction = db.execute(select(user_transactions).where(user_transactions.c.transaction_id == transaction_id)).fetchone()
+    transaction = db.execute(
+        select(user_transactions).where(user_transactions.c.transaction_id == transaction_id)
+    ).fetchone()
+    logger.info(f"{recognized_name} buys {total_quantity} items with ${transaction.amount}")
     return TransactionResponse(
+        user_name = recognized_name,
         transaction_id=transaction.transaction_id,
         amount=transaction.amount,
         description=transaction.description,
         created_at=transaction.created_at,
         balance=transaction.balance,
+        total_quantity=transaction.total_quantity,
         items=items_responses,
     )
 
@@ -266,30 +332,30 @@ async def predict(file: UploadFile = File(...)):
     _, encoded = cv2.imencode(".jpg", annotated)
     return StreamingResponse(io.BytesIO(encoded.tobytes()), media_type="image/jpeg")
 
-@app.post("/predict-person", response_model=PredictResponse)
-async def predict_person(file: UploadFile = File(...)):
-    data = await file.read()
-    arr = np.frombuffer(data, np.uint8)
-    bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
-    if bgr is None:
-        raise HTTPException(status_code=400, detail="Invalid image")
+# @app.post("/predict-person", response_model=PredictResponse)
+# async def predict_person(file: UploadFile = File(...)):
+#     data = await file.read()
+#     arr = np.frombuffer(data, np.uint8)
+#     bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+#     if bgr is None:
+#         raise HTTPException(status_code=400, detail="Invalid image")
 
-    rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+#     rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
 
-    locs = face_recognition.face_locations(rgb)
-    if not locs:
-        return PredictResponse(name="Unknown")
+#     locs = face_recognition.face_locations(rgb)
+#     if not locs:
+#         return PredictResponse(name="Unknown")
 
-    encs = face_recognition.face_encodings(rgb, locs)
-    encoding = encs[0]
+#     encs = face_recognition.face_encodings(rgb, locs)
+#     encoding = encs[0]
 
-    matches = face_recognition.compare_faces(KNOWN_ENCODINGS, encoding)
-    if not any(matches):
-        return PredictResponse(name="Unknown")
+#     matches = face_recognition.compare_faces(KNOWN_ENCODINGS, encoding)
+#     if not any(matches):
+#         return PredictResponse(name="Unknown")
 
-    dists = face_recognition.face_distance(KNOWN_ENCODINGS, encoding)
-    best = int(np.argmin(dists))
-    return PredictResponse(name=KNOWN_NAMES[best])
+#     dists = face_recognition.face_distance(KNOWN_ENCODINGS, encoding)
+#     best = int(np.argmin(dists))
+#     return PredictResponse(name=KNOWN_NAMES[best])
 
 
 @app.get("/signup", response_class=HTMLResponse)

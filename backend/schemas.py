@@ -23,7 +23,6 @@ class PayItem(BaseModel):
     price: float
 
 class PayRequest(BaseModel):
-    user_id: int
     items: List[PayItem]
     total_amount: float
     description: Optional[str] = None
@@ -36,11 +35,13 @@ class TransactionItemResponse(BaseModel):
     price: float
 
 class TransactionResponse(BaseModel):
+    user_name : str
     transaction_id: int
     amount: float
     description: Optional[str]
     created_at: datetime
     balance: float
+    total_quantity: int
     items: List[TransactionItemResponse]
 
 class TokenResponse(BaseModel):
