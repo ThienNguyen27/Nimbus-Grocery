@@ -1,4 +1,4 @@
-# uvicorn app:app --reload
+# uvicorn app:app --reload --host 0.0.0.0 --port 8000
 from fastapi.middleware.cors import CORSMiddleware
 import os, sys
 from dotenv import load_dotenv
@@ -65,56 +65,60 @@ def get_db():
 def home():
     return {"message": "welcome to nimbus!"}
 
+# store info on db
 @app.post("/signup", response_model=UserResponse)
 async def signup(
-    name: str            = Form(...),
-    email: str           = Form(...),
-    password: str        = Form(...),
+    name: str = Form(...),
     photo: UploadFile = File(...),
-    db: Session          = Depends(get_db),
+    db: Session = Depends(get_db),
 ):
     try:
-        # Hash password
-        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-
-        # Hash face id
+        # Read photo bytes & decode image
         img_bytes = await photo.read()
-        nparr     = np.frombuffer(img_bytes, np.uint8)
-        bgr_img   = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        rgb_img   = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2RGB)
+        nparr = np.frombuffer(img_bytes, np.uint8)
+        bgr_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if bgr_img is None:
+            raise HTTPException(status_code=400, detail="Invalid image uploaded.")
 
-        # detect & encode faces
+        # Convert to RGB for face_recognition
+        rgb_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2RGB)
+
+        # Detect and encode face
         face_locations = face_recognition.face_locations(rgb_img)
-        encodings      = safe_face_encodings(rgb_img, face_locations)
+        encodings = face_recognition.face_encodings(rgb_img, face_locations)
         if not encodings:
-            raise HTTPException(400, "Could not detect a face in the uploaded photo.")
+            raise HTTPException(status_code=400, detail="Could not detect a face in the uploaded photo.")
 
-        # serialize the first 128-dim embedding as JSON
+        # Serialize the first 128-dim embedding as JSON string
         face_embedding = encodings[0].tolist()
-        face_id_hash   = json.dumps(face_embedding)
-        
+        face_embedding_json = json.dumps(face_embedding)
 
+        # Insert user into database
         result = db.execute(
             insert(users).values(
-                name = name,
-                email= email,
-                password_hash=hashed_password,
-                face_id_hash = face_id_hash,
-                balance = 100.0
+                name=name,
+                face_embedding=face_embedding_json,
+                balance=100.0,
             )
         )
-        logger.info("result %s", result)
         db.commit()
         user_id = result.inserted_primary_key[0]
 
+        # Update in-memory embeddings for immediate recognition
+        global KNOWN_ENCODINGS, KNOWN_NAMES
+        KNOWN_ENCODINGS.append(np.array(face_embedding, dtype=float))
+        KNOWN_NAMES.append(name)
+
+        # Return the newly created user
         user = db.execute(select(users).where(users.c.user_id == user_id)).fetchone()
         if not user:
             raise HTTPException(status_code=500, detail="User creation failed")
         return UserResponse(**dict(user._mapping))
 
-    except Exception as e:
-        traceback.print_exc()  # this prints the full error stack trace to your terminal
+    except Exception:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail="Internal server error")
+
 
 @app.post("/buy")
 def buy(request: BuyRequest, db=Depends(get_db)):
@@ -133,6 +137,27 @@ def buy(request: BuyRequest, db=Depends(get_db)):
     db.commit()
     return {"message": "Items reserved"}
 
+def load_known_faces_from_db() -> tuple[list[np.ndarray], list[str]]:
+    db: Session = SessionLocal()
+    try:
+        rows = db.execute(select(users.c.name, users.c.face_embedding)).all()
+    finally:
+        db.close()
+
+    encodings, names = [], []
+    for name, raw_json in rows:
+        if not raw_json:
+            continue
+        try:
+            arr = np.array(json.loads(raw_json), dtype=float)
+            encodings.append(arr)
+            names.append(name)
+        except Exception as e:
+            print(f"⚠️ could not parse embedding for {name}: {e}")
+    return encodings, names
+
+# Immediately after your app/config setup:
+KNOWN_ENCODINGS, KNOWN_NAMES = load_known_faces_from_db()
 @app.post("/pay", response_model=TransactionResponse)
 def pay(request: PayRequest, db=Depends(get_db)):
     user = db.execute(select(users).where(users.c.user_id == request.user_id)).fetchone()
@@ -230,10 +255,30 @@ async def predict(file: UploadFile = File(...)):
     _, img_encoded = cv2.imencode(".jpg", annotated)
     return StreamingResponse(io.BytesIO(img_encoded.tobytes()), media_type="image/jpeg")
 
-# detect peron
-@app.post("/predict-person")
-async def predictBuyer(file: UploadFile = File(...)):
-    return
+@app.post("/predict-person", response_model=PredictResponse)
+async def predict_person(file: UploadFile = File(...)):
+    data = await file.read()
+    arr = np.frombuffer(data, np.uint8)
+    bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    if bgr is None:
+        raise HTTPException(status_code=400, detail="Invalid image")
+
+    rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+
+    locs = face_recognition.face_locations(rgb)
+    if not locs:
+        return PredictResponse(name="Unknown")
+
+    encs = face_recognition.face_encodings(rgb, locs)
+    encoding = encs[0]
+
+    matches = face_recognition.compare_faces(KNOWN_ENCODINGS, encoding)
+    if not any(matches):
+        return PredictResponse(name="Unknown")
+
+    dists = face_recognition.face_distance(KNOWN_ENCODINGS, encoding)
+    best = int(np.argmin(dists))
+    return PredictResponse(name=KNOWN_NAMES[best])
 
 
 @app.get("/signup", response_class=HTMLResponse)

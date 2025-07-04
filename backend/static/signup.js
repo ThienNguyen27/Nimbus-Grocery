@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+    console.log("signup.js loaded!");
     const form = document.getElementById("signup-form");
     const message = document.getElementById("message");
     const canvas = document.getElementById("preview");
@@ -23,20 +24,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     form.addEventListener("submit", async (e) => {
+        console.log("Submitting signup form...");
         e.preventDefault();
 
         const name = document.getElementById("username").value;
-        const email = document.getElementById("email").value;
-        const password = document.getElementById("password").value;
+        console.log(name);
         // Capture canvas as blob
         const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg"));
 
         const formData = new FormData();
         formData.append("name", name);
-        formData.append("email", email);
-        formData.append("password", password);
         formData.append("photo", blob, "snapshot.jpg");
-
+        console.log("Sending POST /signup with name:", name);
         try {
             const response = await fetch("http://127.0.0.1:8000/signup", {
                 method: "POST",

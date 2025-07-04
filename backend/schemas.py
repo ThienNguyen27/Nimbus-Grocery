@@ -5,16 +5,9 @@ from datetime import datetime
 class UserResponse(BaseModel):
     user_id: int
     name: str
-    email: str
     balance: float
-    face_id_hash: Optional[str] = None
+    face_embedding: Optional[str] = None
     created_at: datetime
-
-class UserSignupRequest(BaseModel):
-    name: str
-    email: str
-    password: str
-    face_id_hash: Optional[str] = None
 
 class BuyItem(BaseModel):
     item_id: int
@@ -49,10 +42,6 @@ class TransactionResponse(BaseModel):
     created_at: datetime
     balance: float
     items: List[TransactionItemResponse]
-
-class UserLoginRequest(BaseModel):
-    email: str
-    password: str
 
 class TokenResponse(BaseModel):
     token: str

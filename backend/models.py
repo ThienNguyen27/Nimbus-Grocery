@@ -6,11 +6,9 @@ metadata = MetaData()
 users = Table(
     "users", metadata,
     Column("user_id", Integer, primary_key=True),
-    Column("name", String(100)),
-    Column("email", String(255), unique=True),
+    Column("name", String(100), nullable=False),
     Column("balance", Float, default=0.0),
-    Column("face_id_hash", Text, nullable=True),
-    Column("password_hash", String(255), nullable=False),
+    Column("face_embedding", Text, nullable=False),  # serialized 128-d vector
     Column("created_at", DateTime, default=datetime.datetime.utcnow),
 )
 
