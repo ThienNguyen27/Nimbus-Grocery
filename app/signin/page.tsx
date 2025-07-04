@@ -104,6 +104,14 @@ export default function Home() {
               Contactless payment using Facial biometric authentication enables secure,<br />
               biometric authentication by allowing users to authorize transactions simply by scanning their face.
             </p>
+             {/* Predict Button */}
+          <div className="relative z-10 text-center mt-8">
+            <Link href="/predict">
+              <button className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Predict
+              </button>
+            </Link>
+          </div>
           </motion.div>
 
       
@@ -148,14 +156,7 @@ export default function Home() {
               </motion.div>
               
             </motion.div>
-                {/* Predict Button */}
-          <div className="relative z-10 text-center mt-8">
-            <Link href="/predict">
-              <button className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700">
-                Predict
-              </button>
-            </Link>
-          </div>
+               
           </div>
         </section>
       </main>
