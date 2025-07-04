@@ -9,7 +9,7 @@ export default function PaymentPage() {
   const webcamRef = useRef<Webcam>(null);
   const [error, setError]       = useState<string | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  
+
   useEffect(() => {
     setCartItems([
       { itemId: 1, name: 'Apple',  quantity: 3, price: 0.5 },
@@ -62,7 +62,8 @@ export default function PaymentPage() {
 
       const data = await response.json();
       console.log("Payment successful:", data);
-      alert(`Thank you for shopping with us, ${data.user_name}! 🎉\nTransaction ID: ${data.transaction_id}`);
+      alert(`Thank you for shopping with us, ${data.user_name}! \nTransaction ID: ${data.transaction_id}`);
+      window.location.href = `http://localhost:3001/signin?username=${encodeURIComponent(data.user_name)}&balance=${encodeURIComponent(data.balance)}`;
     } catch (err: any) {
       console.error(err);
       setError("Payment failed: " + (err?.message || ""));

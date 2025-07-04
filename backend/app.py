@@ -26,6 +26,7 @@ from dotenv import load_dotenv
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import face_recognition
+import models
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from ml_models.person_detection_model.model import load_known_faces, safe_face_encodings
 import json
@@ -119,23 +120,19 @@ async def signup(
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="Internal server error")
 
+# Sign user check their balance from db
+@app.get("/signin")
+async def signin(db: Session = Depends(get_db)):
+    recognized_user_name = "thien"  # Replace with your face recognition logic
 
-# @app.post("/buy")
-# def buy(request: BuyRequest, db=Depends(get_db)):
-#     user = db.execute(select(users).where(users.c.user_id == request.user_id)).fetchone()
-#     if not user:
-#         raise HTTPException(status_code=404, detail="User not found")
-#     for item in request.items:
-#         db_item = db.execute(select(item_checklist).where(item_checklist.c.item_id == item.item_id)).fetchone()
-#         if not db_item or db_item.quantity_remaining < item.quantity:
-#             raise HTTPException(status_code=400, detail=f"Item {item.item_id} unavailable")
-#         db.execute(
-#             update(item_checklist)
-#             .where(item_checklist.c.item_id == item.item_id)
-#             .values(quantity_remaining=db_item.quantity_remaining - item.quantity)
-#         )
-#     db.commit()
-#     return {"message": "Items reserved"}
+    user = db.query(users).filter_by(name=recognized_user_name).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {
+        "user_name": user.name,
+        "balance": user.balance,
+    }
 
 def load_known_faces_from_db() -> tuple[list[np.ndarray], list[str]]:
     db: Session = SessionLocal()
@@ -331,32 +328,6 @@ async def predict(file: UploadFile = File(...)):
     annotated = res.plot()
     _, encoded = cv2.imencode(".jpg", annotated)
     return StreamingResponse(io.BytesIO(encoded.tobytes()), media_type="image/jpeg")
-
-# @app.post("/predict-person", response_model=PredictResponse)
-# async def predict_person(file: UploadFile = File(...)):
-#     data = await file.read()
-#     arr = np.frombuffer(data, np.uint8)
-#     bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
-#     if bgr is None:
-#         raise HTTPException(status_code=400, detail="Invalid image")
-
-#     rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
-
-#     locs = face_recognition.face_locations(rgb)
-#     if not locs:
-#         return PredictResponse(name="Unknown")
-
-#     encs = face_recognition.face_encodings(rgb, locs)
-#     encoding = encs[0]
-
-#     matches = face_recognition.compare_faces(KNOWN_ENCODINGS, encoding)
-#     if not any(matches):
-#         return PredictResponse(name="Unknown")
-
-#     dists = face_recognition.face_distance(KNOWN_ENCODINGS, encoding)
-#     best = int(np.argmin(dists))
-#     return PredictResponse(name=KNOWN_NAMES[best])
-
 
 @app.get("/signup", response_class=HTMLResponse)
 @app.get("/signup/", response_class=HTMLResponse)
