@@ -238,12 +238,9 @@ app.add_middleware(
 model = YOLO("../ml_models/grocery-detection-model/run/train/grocery_finetune5/weights/best.pt")
 
 # Inference-time filter: drop one class by index
-unwanted_classes = ["Tomato", "Red-Grapefruit"]
-unwanted_ids = [
-    model.names.index(c)
-    for c in unwanted_classes
-    if c in model.names
-]
+unwanted_ids = [17, 19]
+
+# build allowed list
 allowed = [i for i in range(len(model.names)) if i not in unwanted_ids]
 
 @app.get("/hello")
@@ -255,17 +252,19 @@ def read_hello():
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     contents = await file.read()
-    npimg = np.frombuffer(contents, np.uint8)
-    frame = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
-
+    arr = np.frombuffer(contents, np.uint8)
+    frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
     if frame is None:
-        raise HTTPException(status_code=400, detail="Invalid image")
+        raise HTTPException(400, "Invalid image")
 
+    # only run detection on classes in `allowed`
     results = model.predict(frame, conf=0.4, iou=0.5, classes=allowed)
-    annotated = results[0].plot()
+    res = results[0]
 
-    _, img_encoded = cv2.imencode(".jpg", annotated)
-    return StreamingResponse(io.BytesIO(img_encoded.tobytes()), media_type="image/jpeg")
+    # annotate & return
+    annotated = res.plot()
+    _, encoded = cv2.imencode(".jpg", annotated)
+    return StreamingResponse(io.BytesIO(encoded.tobytes()), media_type="image/jpeg")
 
 @app.post("/predict-person", response_model=PredictResponse)
 async def predict_person(file: UploadFile = File(...)):
