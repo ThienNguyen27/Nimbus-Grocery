@@ -56,3 +56,6 @@ class UserLoginRequest(BaseModel):
 
 class TokenResponse(BaseModel):
     token: str
+
+class PredictResponse(BaseModel):
+    name: str
