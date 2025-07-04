@@ -1,126 +1,102 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from 'next/navigation';
 
 export default function PredictPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [counts, setCounts] = useState<Record<string, number>>({});
-  const [loadingModel, setLoadingModel] = useState(true);
-  const router = useRouter();
+  const [resultImg, setResultImg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    async function setupCamera() {
+    const startVideo = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         if (videoRef.current) videoRef.current.srcObject = stream;
-        return new Promise<void>((resolve) => {
-          videoRef.current!.onloadedmetadata = () => resolve();
-        });
       } catch (err) {
         console.error("Error accessing webcam:", err);
       }
-    }
+    };
 
-    async function loadModelAndPredict() {
-      await setupCamera();
-      const video = videoRef.current!;
-      const canvas = canvasRef.current!;
-      const ctx = canvas.getContext("2d")!;
+    startVideo();
 
-      // Load YOLO model (TS-safe)
-      const model = await (window as any).yolo.load();
-      setLoadingModel(false);
+    const interval = setInterval(() => {
+      captureAndSend();
+    }, 2000);
 
-      const predictFrame = async () => {
-        if (video.readyState === 4) {
-          // Resize canvas to match video
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-          // Run detection
-          const predictions = await model.detect(video);
-
-          // Draw boxes & labels inline
-          ctx.lineWidth = 2;
-          ctx.font = "16px sans-serif";
-          ctx.textBaseline = "top";
-          predictions.forEach((pred: any) => {
-            const [x, y, w, h] = pred.bbox as [number, number, number, number];
-            const label = (pred.className || pred.label || pred.class).toString();
-            const score = ((pred.confidence ?? pred.probability ?? 0) * 100).toFixed(1);
-
-            // Box
-            ctx.strokeStyle = "green";
-            ctx.strokeRect(x, y, w, h);
-            // Label background
-            const text = `${label} ${score}%`;
-            const textW = ctx.measureText(text).width;
-            const textH = parseInt(ctx.font, 10);
-            ctx.fillStyle = "green";
-            ctx.fillRect(x, y - textH - 4, textW + 4, textH + 4);
-            // Text
-            ctx.fillStyle = "black";
-            ctx.fillText(text, x + 2, y - textH - 2);
-          });
-
-          // Tally counts
-          const newCounts: Record<string, number> = {};
-          predictions.forEach((pred: any) => {
-            const label = (pred.className || pred.label || pred.class).toString();
-            newCounts[label] = (newCounts[label] || 0) + 1;
-          });
-          setCounts(newCounts);
-        }
-        requestAnimationFrame(predictFrame);
-      };
-
-      predictFrame();
-    }
-
-    loadModelAndPredict();
+    return () => clearInterval(interval);
   }, []);
 
-  const goToPay = () => {
-    router.push("/payment");
+  const captureAndSend = async () => {
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    if (!canvas || !video) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+
+      const formData = new FormData();
+      formData.append("file", blob, "frame.jpg");
+
+      try {
+        setLoading(true);
+        const res = await fetch("http://localhost:8000/predict", {
+          method: "POST",
+          body: formData,
+        });
+
+        const blobRes = await res.blob();
+        const imageUrl = URL.createObjectURL(blobRes);
+        setResultImg(imageUrl);
+      } catch (err) {
+        console.error("Error sending frame to backend:", err);
+      } finally {
+        setLoading(false);
+      }
+    }, "image/jpeg");
+  };
+
+  const router = useRouter();
+
+   const goToPay = () => {
+    router.push('/payment');
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6 space-y-6">
       <h1 className="text-3xl font-bold text-gray-800">🍎 Live Grocery Detection</h1>
 
-      {loadingModel ? (
-        <p className="text-gray-500">Loading model and camera...</p>
-      ) : (
-        <>
-          <div className="mb-4 w-full max-w-md text-left">
-            <p className="font-medium text-lg mb-2">Detected fruits:</p>
-            {Object.keys(counts).length === 0 ? (
-              <p className="text-gray-600">None</p>
-            ) : (
-              <ul className="list-disc list-inside">
-                {Object.entries(counts).map(([label, qty]) => (
-                  <li key={label} className="text-gray-800">
-                    {label}: <span className="font-bold">{qty}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+      <div className="rounded-xl overflow-hidden shadow-lg border-2 border-gray-200">
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
+          className="w-[480px] h-[360px] object-cover"
+        />
+      </div>
 
-          <div className="relative rounded-xl overflow-hidden shadow-lg border-2 border-gray-200">
-            <video
-              ref={videoRef}
-              autoPlay
-              muted
-              playsInline
-              className="w-[480px] h-[360px] object-cover"
-            />
-            <canvas ref={canvasRef} className="absolute top-0 left-0" />
-          </div>
-        </>
+      <canvas ref={canvasRef} style={{ display: "none" }} />
+
+      {loading && <p className="text-gray-500 animate-pulse">Predicting...</p>}
+
+      {resultImg && !loading && (
+        <div className="flex flex-col items-center space-y-2">
+          <h2 className="text-xl font-semibold text-green-700">Prediction Result</h2>
+          <img
+            src={resultImg}
+            alt="Predicted Result"
+            className="w-[480px] rounded-xl border-4 border-green-500 shadow-md transition-opacity duration-300"
+          />
+        </div>
       )}
 
       <button
