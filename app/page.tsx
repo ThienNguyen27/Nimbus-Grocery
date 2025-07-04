@@ -186,10 +186,15 @@ export default function Home() {
                   Track inventory, customer behavior, and sales in real time with an AI-powered dashboard.
                 </p>
               </motion.div>
+              
             </motion.div>
+            
           </div>
+          
         </section>
+        
       </main>
+      
       <footer className="border-t border-neutral-200 py-8 relative z-10">
         <div className="container mx-auto px-4">
           <motion.div
